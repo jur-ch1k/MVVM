@@ -1,0 +1,147 @@
+﻿<Window x:Class="MVVM_VIEW.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MVVM_VIEW"
+        xmlns:oxy="http://oxyplot.org/wpf"
+        mc:Ignorable="d"
+        Title="MVVM" Height="450" Width="800">
+    <Window.Resources>
+        <local:ArrayToStrConverter x:Key ="arr_converter"/>
+        <local:SplineListConverter x:Key ="splinelist_converter"/>
+        <local:CoordToSting x:Key ="coord_converter"/>
+        <local:ValToSting x:Key ="val_converter"/>
+        <local:SndDerToSting x:Key ="sndder_converter"/>
+        <local:BoolConverter x:Key ="bool_converter"/>
+        <local:IntegralValFormat x:Key ="integralvalformat"/>
+        <Style TargetType="TextBox">
+            <Style.Triggers>
+                <Trigger Property="Validation.HasError" Value="True">
+                    <Setter Property="ToolTip"
+                Value="{Binding RelativeSource={RelativeSource Self},
+                    Path=(Validation.Errors)[0].ErrorContent}" />
+                    <Setter Property="Foreground" Value="Red" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="IsEnabled" Value="False"/>
+            <Style.Triggers>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding ElementName=node_num, Path=(Validation.HasError)}" Value="False"/>
+                        <Condition Binding="{Binding ElementName=left_end, Path=(Validation.HasError)}" Value="False"/>
+                        <Condition Binding="{Binding ElementName=right_end, Path=(Validation.HasError)}" Value="False"/>
+                        <Condition Binding="{Binding ElementName=slpine_node_num, Path=(Validation.HasError)}" Value="False"/>
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="IsEnabled" Value="True" />
+                </MultiDataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+    <Grid x:Name="grid" ShowGridLines="True">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="4*"></RowDefinition>
+            <RowDefinition Height="4*"></RowDefinition>
+            <RowDefinition Height="1*"></RowDefinition>
+
+        </Grid.RowDefinitions>
+
+        <!--Ввод данных-->
+        <Label Margin="183,10,479,147" Content="Настройка RawData"/>
+        <Label Margin="580,10,71,147" Content="Настройка SplineData"/>
+
+        <Label  Grid.Row="0" Margin="10,58,692,99" Width="NaN" Content="Число узлов:" />
+        <TextBox x:Name="node_num" Grid.Row="0"  Height="NaN" Margin="113,61,565,102" Width="NaN">
+            <TextBox.Text>
+                <Binding Path="NodesNum" NotifyOnValidationError="True">
+                    <Binding.ValidationRules>
+                        <DataErrorValidationRule/>
+                    </Binding.ValidationRules>
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <Label Grid.Row="0" Margin="10,99,692,58" Width="NaN" Content="Лев. граница:" />
+        <TextBox x:Name="left_end" Grid.Row="0"  Height="NaN" Margin="113,102,565,61" Width="NaN">
+            <TextBox.Text>
+                <Binding Path="LEnd" NotifyOnValidationError="True">
+                    <Binding.ValidationRules>
+                        <DataErrorValidationRule/>
+                    </Binding.ValidationRules>
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <Label Grid.Row="0" Margin="10,140,692,17" Width="NaN" Content="Прав. граница:" />
+        <TextBox x:Name="right_end" Grid.Row="0"  Height="NaN" Margin="113,143,565,21" Width="NaN">
+            <TextBox.Text>
+                <Binding Path="REnd" NotifyOnValidationError="True">
+                    <Binding.ValidationRules>
+                        <DataErrorValidationRule/>
+                    </Binding.ValidationRules>
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+
+        <StackPanel Grid.Row="0" Margin="277,58,315,69">
+            <Label Width="NaN" Content="Тип сетки:" />
+            <RadioButton x:Name="uniform" GroupName="Net_type" Content="Uniform" Width="205" IsChecked="{Binding IsUnuform}"/>
+            <RadioButton x:Name="nonuniform" GroupName="Net_type" Content="Non uniform" Width="205" IsChecked="{Binding IsUnuform, Converter={StaticResource bool_converter}}"/>
+        </StackPanel>
+        <StackPanel Grid.Row="0" Margin="277,130,315,5">
+            <Label Width="NaN" Content="Способ инициализации:" />
+            <ComboBox x:Name="init_type" SelectedItem = "{Binding FuncType}" ItemsSource="{Binding FuncEnum}"/>
+        </StackPanel>
+        <Label  Grid.Row="0" Margin="522,58,162,99" Width="NaN" Content="Число узлов:" />
+        <TextBox x:Name="slpine_node_num" Grid.Row="0" Height="NaN" Margin="648,61,30,102" Width="NaN">
+            <TextBox.Text>
+                <Binding Path="SplineNodesNum" NotifyOnValidationError="True">
+                    <Binding.ValidationRules>
+                        <DataErrorValidationRule/>
+                    </Binding.ValidationRules>
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+        <Label  Grid.Row="0" Margin="522,99,158,58" Width="NaN" Content="2я производная:" />
+        <TextBox x:Name="ders" Grid.Row="0"  Height="NaN" Margin="648,102,30,61" Width="NaN">
+            <TextBox.Text>
+                <MultiBinding Converter="{StaticResource arr_converter}">
+                    <Binding Path="LeftSndDer"/>
+                    <Binding Path="RightSndDer"/>
+                </MultiBinding>
+            </TextBox.Text>
+        </TextBox>
+
+
+        <!--Вывод данных-->
+
+        <Label Content="Значения RawData:" Margin="10,10,637,147" Grid.Row="1"/>
+        <ListBox x:Name="RawData_info" ItemsSource="{Binding RawData_info_srts}"  Grid.Row="1" Margin="10,39,637,27"/>
+        <Label Content="Значения SplineData:" Margin="183,10,464,147" Grid.Row="1"/>
+        <ListBox x:Name="SplineData_info" Grid.Row="1" Margin="183,39,464,27" ItemsSource="{Binding Spline.SplineList}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel>
+                        <TextBlock Text="{Binding Coord, Converter = {StaticResource coord_converter}}"/>
+                        <TextBlock Text="{Binding Val, Converter = {StaticResource val_converter}}"/>
+                        <TextBlock Text="{Binding SndDer, Converter = {StaticResource sndder_converter}}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <Label Content="Значения Выбора:" Margin="361,10,286,147" Grid.Row="1"/>
+        <TextBlock x:Name="SplineData_selected" Grid.Row="1" Margin="361,39,286,79" Text="{Binding ElementName=SplineData_info, Path=SelectedItem, Converter={StaticResource splinelist_converter}}"/>
+        <Label Content="Значение интеграла:" Margin="361,114,286,43" Grid.Row="1"/>
+        <TextBlock Text="{Binding Spline.IntergralVal, Converter = {StaticResource integralvalformat}}" x:Name="integral" Margin="361,150,286,13" Grid.Row="1"/>
+
+        <!--Кнопки-->
+
+        <Button Grid.Row="2" Margin="70,10,582,10" Content="Save" Command="{Binding SaveCommand}"/>
+        <Button Grid.Row="2" Margin="326,11,326,10" Content="RawData from File" Command="{Binding LoadCommand}"/>
+        <Button x:Name="create" Grid.Row="2" Margin="582,11,70,10" Content="RawData from Controls" Command="{Binding CreateCommand}"/>
+
+        <!--График-->
+
+        <oxy:PlotView Model="{Binding Model}" x:Name="plot" Margin="514,0,0,48" Grid.Row="1" Grid.RowSpan="2"/>
+    </Grid>
+</Window>
